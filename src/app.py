@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from src.sentiment_detector.sentiment_detector import SentimentDetector
 
-load_dotenv('.env', verbose=True)
+load_dotenv('.env')
 
 app = FastAPI()
 
@@ -91,7 +91,7 @@ class GoodPointsOfReview(BaseModel):
 
 def good_points_detection_call(state: State):
     system_message = SystemMessage(
-        f'''Ты должен найти в отзыве то, что нравится пользователю:
+        '''Ты должен найти в отзыве то, что нравится пользователю:
         - Скорость доставки
         - Качество товара
         - Цена товара
@@ -103,7 +103,7 @@ def good_points_detection_call(state: State):
 
     user_message = HumanMessage(f"""Найди то, что нравится пользователю в этом отзыве.
 
-                                <review>{state['fixed_review']}</review>""")
+                                <review>{state.get('fixed_review', 'No review')}</review>""")
     response = llm.with_structured_output(GoodPointsOfReview).invoke([system_message, user_message])
 
     return {
@@ -125,7 +125,7 @@ class BadPointsOfReview(BaseModel):
 
 def bad_points_detection_call(state: State):
     system_message = SystemMessage(
-        f'''Ты должен найти в отзыве то, что расстраивает пользователя:
+        '''Ты должен найти в отзыве то, что расстраивает пользователя:
         - Скорость доставки
         - Качество товара
         - Цена товара
@@ -137,7 +137,7 @@ def bad_points_detection_call(state: State):
 
     user_message = HumanMessage(f"""Найди то, что расстраивает пользователя в этом отзыве.
 
-                                <review>{state['fixed_review']}</review>""")
+                                <review>{state.get('fixed_review', 'No review')}</review>""")
     response = llm.with_structured_output(BadPointsOfReview).invoke([system_message, user_message])
 
     return {
