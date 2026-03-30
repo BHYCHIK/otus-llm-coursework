@@ -14,7 +14,11 @@ import os
 
 from pydantic import BaseModel, Field
 
+from src.sentiment_detector.sentiment_detector import SentimentDetector
+
 load_dotenv('../.env', verbose=True)
+
+sentiment_detector = SentimentDetector('./../sentiment_bge_m3_ru_cls/prod')
 
 class State(TypedDict):
     original_review: str
@@ -50,6 +54,10 @@ def fix_review_call(state: State):
     <original_review>{state['original_review']}</original_review>""")
     response = llm.invoke([system_message, user_message])
     print(response.content)
+
+    sentiment = sentiment_detector.predict_sentiment([response.content])
+    print(sentiment)
+
     return {
         'fixed_review': response.content,
     }
