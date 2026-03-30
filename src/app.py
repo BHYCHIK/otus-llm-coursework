@@ -76,7 +76,11 @@ def fix_review_call(state: State):
     }
 
 def sentiment_detection_call(state: State):
-    sentiment = sentiment_detector.predict_sentiment([state['fixed_review']])[0]['label']
+    fixed_review = state.get("fixed_review")
+    if not fixed_review:
+        raise ValueError("fixed_review missing")
+
+    sentiment = sentiment_detector.predict_sentiment([fixed_review])[0]['label']
     return {
         'sentiment': sentiment,
     }
@@ -101,9 +105,13 @@ def good_points_detection_call(state: State):
 
          Игнорируй то, что расстраивает пользователя. Ставь true только при явном упоминании, иначе false.''')
 
+    fixed_review = state.get("fixed_review")
+    if not fixed_review:
+        raise ValueError("fixed_review missing")
+
     user_message = HumanMessage(f"""Найди то, что нравится пользователю в этом отзыве.
 
-                                <review>{state.get('fixed_review', 'No review')}</review>""")
+                                <review>{fixed_review}</review>""")
     response = llm.with_structured_output(GoodPointsOfReview).invoke([system_message, user_message])
 
     return {
@@ -135,9 +143,13 @@ def bad_points_detection_call(state: State):
 
          Игнорируй то, что нравится пользователю. Ставь true только при явном упоминании, иначе false.''')
 
+    fixed_review = state.get("fixed_review")
+    if not fixed_review:
+        raise ValueError("fixed_review missing")
+
     user_message = HumanMessage(f"""Найди то, что расстраивает пользователя в этом отзыве.
 
-                                <review>{state.get('fixed_review', 'No review')}</review>""")
+                                <review>{fixed_review}</review>""")
     response = llm.with_structured_output(BadPointsOfReview).invoke([system_message, user_message])
 
     return {
