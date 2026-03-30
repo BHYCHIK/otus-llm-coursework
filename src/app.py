@@ -1,6 +1,5 @@
 from typing import TypedDict
 
-from langchain.agents import create_agent
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
@@ -12,11 +11,15 @@ from langfuse.langchain import CallbackHandler as LangfuseCallbackHandler
 from dotenv import load_dotenv
 import os
 
+from fastapi import FastAPI, Form
+
 from pydantic import BaseModel, Field
 
 from src.sentiment_detector.sentiment_detector import SentimentDetector
 
-load_dotenv('../.env', verbose=True)
+load_dotenv('.env', verbose=True)
+
+app = FastAPI()
 
 sentiment_detector = SentimentDetector(os.environ.get("SENTIMENT_DETECTION_MODEL"))
 
@@ -133,7 +136,7 @@ workflow.add_edge('good_points_detection', 'bad_points_detection')
 workflow.add_edge('bad_points_detection', END)
 
 
-app = workflow.compile(checkpointer=memory)
+graph = workflow.compile(checkpointer=memory)
 
 original_review = '''
 похоже на подростковое фэнтези,может так и      задумывалось. взрослому скучновато, простовато, герой как-будто один и тот же, снова бессмертный, 
@@ -150,15 +153,32 @@ original_review = '''
 отличный, всё супер, спасибо продавцу за оперативную отправку, монитор пришёл раньше обещанной даты, битых пикселей нет, параметры в соответствии с заявленными  
 '''
 
+@app.get('/')
+def root():
+    return {'status': 'ok'}
+
+@app.post('/analyze_review')
+def analyze_review(review: str = Form(..., description="Review from marketplace")):
+    config: RunnableConfig = {
+        'configurable': {'thread_id': 1},
+        'callbacks': [LangfuseCallbackHandler()],
+    }
+
+    graph.invoke(State({'original_review': review}), config=config)
+
+    state = graph.get_state(config)
+    print(state)
+
+
 def main():
     config: RunnableConfig = {
         'configurable': {'thread_id': 1},
         'callbacks': [LangfuseCallbackHandler()],
     }
 
-    app.invoke(State({'original_review': original_review}), config=config)
+    graph.invoke(State({'original_review': original_review}), config=config)
 
-    state = app.get_state(config)
+    state = graph.get_state(config)
     print(state)
 
 if __name__ == "__main__":
