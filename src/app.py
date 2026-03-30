@@ -200,6 +200,21 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
     return {
         'original_review': result.get('original_review'),
         'fixed_review': result.get('fixed_review'),
+        'sentiment': result.get('sentiment'),
+        'good_points': {
+            'speed_of_delivery': result.get('good_speed_of_delivery'),
+            'price': result.get('good_price'),
+            'quality': result.get('good_quality'),
+            'good_looking': result.get('good_good_looking'),
+            'fit_description': result.get('good_fit_description'),
+        },
+        'bad_points': {
+            'speed_of_delivery': result.get('bad_speed_of_delivery'),
+            'price': result.get('bad_price'),
+            'quality': result.get('bad_quality'),
+            'good_looking': result.get('bad_good_looking'),
+            'fit_description': result.get('bad_fit_description'),
+        }
     }
 
 
