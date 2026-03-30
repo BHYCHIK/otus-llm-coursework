@@ -4,3 +4,7 @@ __pycache__/
 *.pyc__pycache__/
 *.pyc
 sentiment_bge_m3_ru_cls/
+grafana_data/
+langfuse_clickhouse_data/
+langfuse_clickhouse_logs/
+langfuse_minio_data/
