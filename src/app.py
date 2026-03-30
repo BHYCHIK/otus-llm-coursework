@@ -32,6 +32,28 @@ memory = MemorySaver()
 def fix_review_call(state: State):
     print('Review fix call')
     print(state['original_review'])
+    system_message = SystemMessage(content="""
+    Ты редактор текстов в издательстве.
+    На вход ты получаешь текст. Твоя задача его исправить, ничего не удаляя, и не добавляя.
+    
+    Ты должен:
+    - Исправить синтаксис;
+    - Исправить пунктуацию;
+    - Исправить орфографические ошибки;
+    - Исправить опечатки;
+    - Удалить эмодзи;
+    - Убрать лишние пробелы;
+    - Удали xml/html тэги.
+    """)
+
+    user_message = HumanMessage(content=f"""Исправить следующий отзыв о товаре согласно правилам:
+    <original_review>{state['original_review']}</original_review>""")
+    response = llm.invoke([system_message, user_message])
+    print(response.content)
+    return {
+        'fixed_review': response.content,
+    }
+
 
 workflow = StateGraph(State)
 workflow.add_node('fix_review', fix_review_call)
@@ -42,7 +64,7 @@ workflow.add_edge('fix_review', END)
 app = workflow.compile(checkpointer=memory)
 
 original_review = '''
-похоже на подростковое фэнтези, может так и задумывалось. взрослому скучновато, простовато, герой как-будто один и тот же, снова бессмертный, 
+похоже на подростковое фэнтези,может так и      задумывалось. взрослому скучновато, простовато, герой как-будто один и тот же, снова бессмертный, 
 снова на нем сошелся "свет клином", да еще и неандертальцы...как эхо романов про Северина Морозова, эхайна. (которые, кстати, написаны отменно). 
 ну и фирменное "давайте поделим на тысячу книг и много денежек заработаем", скоро будут каждую главу за деньги продавать. 
 несмотря на вышесказанное, вечерок скоротать можно.
