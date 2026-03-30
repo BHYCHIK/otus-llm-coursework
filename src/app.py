@@ -144,7 +144,7 @@ def bad_points_detection_call(state: State):
 
     user_message = HumanMessage(f"""Найди то, что расстраивает пользователя в этом отзыве.
 
-                                <review>{state['fixed_review']}</review""")
+                                <review>{state['fixed_review']}</review>""")
     response = llm.with_structured_output(BadPointsOfReview).invoke([system_message, user_message])
     print(response)
 
