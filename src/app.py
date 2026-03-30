@@ -99,7 +99,7 @@ def good_points_detection_call(state: State):
         - Функциональность товара
         - Соответствие товара описанию
 
-         Игнорируй то, что расстраивает пользователя.''')
+         Игнорируй то, что расстраивает пользователя. Ставь true только при явном упоминании, иначе false.''')
 
     user_message = HumanMessage(f"""Найди то, что нравится пользователю в этом отзыве.
 
@@ -133,7 +133,7 @@ def bad_points_detection_call(state: State):
         - Функциональность товара
         - Соответствие товара описанию
 
-         Игнорируй то, что нравится пользователю.''')
+         Игнорируй то, что нравится пользователю. Ставь true только при явном упоминании, иначе false.''')
 
     user_message = HumanMessage(f"""Найди то, что расстраивает пользователя в этом отзыве.
 
@@ -193,29 +193,33 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
         'callbacks': [LangfuseCallbackHandler()],
     }
 
-    result = graph.invoke({'original_review': review}, config=config)
+    try:
+        result = graph.invoke({'original_review': review}, config=config)
 
-    return {
-        'original_review': result.get('original_review'),
-        'fixed_review': result.get('fixed_review'),
-        'sentiment': result.get('sentiment'),
-        'good_points': {
-            'speed_of_delivery': result.get('good_speed_of_delivery'),
-            'price': result.get('good_price'),
-            'quality': result.get('good_quality'),
-            'good_looking': result.get('good_good_looking'),
-            'fit_description': result.get('good_fit_description'),
-            'functionality': result.get('good_functionality'),
-        },
-        'bad_points': {
-            'speed_of_delivery': result.get('bad_speed_of_delivery'),
-            'price': result.get('bad_price'),
-            'quality': result.get('bad_quality'),
-            'good_looking': result.get('bad_good_looking'),
-            'fit_description': result.get('bad_fit_description'),
-            'functionality': result.get('bad_functionality'),
+        return {
+            'original_review': result.get('original_review'),
+            'fixed_review': result.get('fixed_review'),
+            'sentiment': result.get('sentiment'),
+            'thread_id': thread_id,
+            'good_points': {
+                'speed_of_delivery': result.get('good_speed_of_delivery'),
+                'price': result.get('good_price'),
+                'quality': result.get('good_quality'),
+                'good_looking': result.get('good_good_looking'),
+                'fit_description': result.get('good_fit_description'),
+                'functionality': result.get('good_functionality'),
+            },
+            'bad_points': {
+                'speed_of_delivery': result.get('bad_speed_of_delivery'),
+                'price': result.get('bad_price'),
+                'quality': result.get('bad_quality'),
+                'good_looking': result.get('bad_good_looking'),
+                'fit_description': result.get('bad_fit_description'),
+                'functionality': result.get('bad_functionality'),
+            }
         }
-    }
+    finally:
+        memory.delete_thread(thread_id)
 
 
 def main():
@@ -226,10 +230,13 @@ def main():
         'callbacks': [LangfuseCallbackHandler()],
     }
 
-    graph.invoke({'original_review': original_review}, config=config)
+    try:
+        graph.invoke({'original_review': original_review}, config=config)
 
-    state = graph.get_state(config)
-    print(state)
+        state = graph.get_state(config)
+        print(state)
+    finally:
+        memory.delete_thread(thread_id)
 
 if __name__ == "__main__":
     main()
