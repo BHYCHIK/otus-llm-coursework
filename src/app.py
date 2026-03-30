@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import TypedDict, NotRequired
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
@@ -26,22 +26,22 @@ sentiment_detector = SentimentDetector(os.environ.get("SENTIMENT_DETECTION_MODEL
 
 class State(TypedDict):
     original_review: str
-    fixed_review: str
-    sentiment: str
+    fixed_review: NotRequired[str]
+    sentiment: NotRequired[str]
 
-    good_speed_of_delivery: bool
-    good_price: bool
-    good_quality: bool
-    good_good_looking: bool
-    good_fit_description: bool
-    good_functionality: bool
+    good_speed_of_delivery: NotRequired[bool]
+    good_price: NotRequired[bool]
+    good_quality: NotRequired[bool]
+    good_good_looking: NotRequired[bool]
+    good_fit_description: NotRequired[bool]
+    good_functionality: NotRequired[bool]
 
-    bad_speed_of_delivery: bool
-    bad_price: bool
-    bad_quality: bool
-    bad_good_looking: bool
-    bad_fit_description: bool
-    bad_functionality: bool
+    bad_speed_of_delivery: NotRequired[bool]
+    bad_price: NotRequired[bool]
+    bad_quality: NotRequired[bool]
+    bad_good_looking: NotRequired[bool]
+    bad_fit_description: NotRequired[bool]
+    bad_functionality: NotRequired[bool]
 
 llm = ChatOpenAI(
     base_url=os.getenv('BASEURL'),
@@ -53,11 +53,9 @@ memory = MemorySaver()
 
 
 def fix_review_call(state: State):
-    print('Review fix call')
-    print(state['original_review'])
     system_message = SystemMessage(content="""
     Ты редактор текстов в издательстве.
-    На вход ты получаешь текст. Твоя задача его исправить, ничего не удаляя, и не добавляя.
+    На вход ты получаешь текст. Твоя задача его исправить, не удаляй, и не добавляй смысловые фрагменты.
     
     Ты должен:
     - Исправить синтаксис;
@@ -72,14 +70,12 @@ def fix_review_call(state: State):
     user_message = HumanMessage(content=f"""Исправить следующий отзыв о товаре согласно правилам:
     <original_review>{state['original_review']}</original_review>""")
     response = llm.invoke([system_message, user_message])
-    print(response.content)
 
     return {
         'fixed_review': response.content,
     }
 
 def sentiment_detection_call(state: State):
-    print('Sentiment detection call')
     sentiment = sentiment_detector.predict_sentiment([state['fixed_review']])[0]['label']
     return {
         'sentiment': sentiment,
@@ -94,7 +90,6 @@ class GoodPointsOfReview(BaseModel):
     functionality: bool = Field(description='Пользователю нравится функциональность товара. Если в тексте нет явного упоминания — ставь false')
 
 def good_points_detection_call(state: State):
-    print('Good points detection call')
     system_message = SystemMessage(
         f'''Ты должен найти в отзыве то, что нравится пользователю:
         - Скорость доставки
@@ -110,7 +105,6 @@ def good_points_detection_call(state: State):
 
                                 <review>{state['fixed_review']}</review>""")
     response = llm.with_structured_output(GoodPointsOfReview).invoke([system_message, user_message])
-    print(response)
 
     return {
         'good_speed_of_delivery': response.speed_of_delivery,
@@ -130,7 +124,6 @@ class BadPointsOfReview(BaseModel):
     functionality: bool = Field(description='Пользователя расстраивает функциональность товара. Если в тексте нет явного упоминания — ставь false')
 
 def bad_points_detection_call(state: State):
-    print('Bad points detection call')
     system_message = SystemMessage(
         f'''Ты должен найти в отзыве то, что расстраивает пользователя:
         - Скорость доставки
@@ -146,7 +139,6 @@ def bad_points_detection_call(state: State):
 
                                 <review>{state['fixed_review']}</review>""")
     response = llm.with_structured_output(BadPointsOfReview).invoke([system_message, user_message])
-    print(response)
 
     return {
         'bad_speed_of_delivery': response.speed_of_delivery,
@@ -213,6 +205,7 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
             'quality': result.get('good_quality'),
             'good_looking': result.get('good_good_looking'),
             'fit_description': result.get('good_fit_description'),
+            'functionality': result.get('good_functionality'),
         },
         'bad_points': {
             'speed_of_delivery': result.get('bad_speed_of_delivery'),
@@ -220,6 +213,7 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
             'quality': result.get('bad_quality'),
             'good_looking': result.get('bad_good_looking'),
             'fit_description': result.get('bad_fit_description'),
+            'functionality': result.get('bad_functionality'),
         }
     }
 
