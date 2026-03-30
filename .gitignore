@@ -1,0 +1,6 @@
+.env
+.idea
+__pycache__/
+*.pyc__pycache__/
+*.pyc
+sentiment_bge_m3_ru_cls/
