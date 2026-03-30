@@ -26,7 +26,7 @@ app = FastAPI()
 review_analysis_total = Counter(
     "review_analysis_total",
     "Total review analysis",
-    ['product_id', 'sentiment',
+    ['sentiment',
      'good_speed_of_delivery', 'good_price', 'good_quality', 'good_good_looking', 'good_fit_description',
      'good_functionality',
      'bad_speed_of_delivery', 'bad_price', 'bad_quality', 'bad_good_looking', 'bad_fit_description',
@@ -249,7 +249,6 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
         }
 
         review_analysis_total.labels(
-            product_id=res['product_id'],
             sentiment=res['sentiment'],
             good_speed_of_delivery=res['good_points']['speed_of_delivery'],
             good_price=res['good_points']['price'],
