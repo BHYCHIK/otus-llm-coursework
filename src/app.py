@@ -28,6 +28,18 @@ class State(TypedDict):
     fixed_review: str
     sentiment: str
 
+    good_speed_of_delivery: bool
+    good_price: bool
+    good_quality: bool
+    good_good_looking: bool
+    good_fit_description: bool
+
+    bad_speed_of_delivery: bool
+    bad_price: bool
+    bad_quality: bool
+    bad_good_looking: bool
+    bad_fit_description: bool
+
 llm = ChatOpenAI(
     base_url=os.getenv('BASEURL'),
     model='qwen-3-32b',
@@ -71,11 +83,11 @@ def sentiment_detection_call(state: State):
     }
 
 class GoodPointsOfReview(BaseModel):
-    SpeedOfDelivery: bool = Field(description='Пользователю нравится скорость доставки')
-    Price: bool = Field(description='Пользователю нравится цена')
-    Quality: bool = Field(description='Пользователю нравится качество товара')
-    GoodLooking: bool = Field(description='Пользователю нравится дизайн и внешний вид товара')
-    FitDescription: bool = Field(description='Пользователю нравится то, что товар соответствует описанию товара')
+    speed_of_delivery: bool = Field(description='Пользователю нравится скорость доставки')
+    price: bool = Field(description='Пользователю нравится цена')
+    quality: bool = Field(description='Пользователю нравится качество товара')
+    good_looking: bool = Field(description='Пользователю нравится дизайн и внешний вид товара')
+    fit_description: bool = Field(description='Пользователю нравится то, что товар соответствует описанию товара')
 
 def good_points_detection_call(state: State):
     print('Good points detection call')
@@ -96,12 +108,20 @@ def good_points_detection_call(state: State):
     response = llm.with_structured_output(GoodPointsOfReview).invoke([system_message, user_message])
     print(response)
 
+    return {
+        'good_speed_of_delivery': response.speed_of_delivery,
+        'good_price': response.price,
+        'good_quality': response.quality,
+        'good_good_looking': response.good_looking,
+        'good_fit_description': response.fit_description,
+    }
+
 class BadPointsOfReview(BaseModel):
-    SpeedOfDelivery: bool = Field(description='Пользователя расстраивает скорость доставки')
-    Price: bool = Field(description='Пользователя расстраивает цена')
-    Quality: bool = Field(description='Пользователя расстраивает качество товара')
-    GoodLooking: bool = Field(description='Пользователя расстраивает дизайн и внешний вид товара')
-    FitDescription: bool = Field(description='Пользователя расстраивает то, что товар отличается от описания товара')
+    speed_of_delivery: bool = Field(description='Пользователя расстраивает скорость доставки')
+    price: bool = Field(description='Пользователя расстраивает цена')
+    quality: bool = Field(description='Пользователя расстраивает качество товара')
+    good_looking: bool = Field(description='Пользователя расстраивает дизайн и внешний вид товара')
+    fit_description: bool = Field(description='Пользователя расстраивает то, что товар отличается от описания товара')
 
 def bad_points_detection_call(state: State):
     print('Bad points detection call')
@@ -121,6 +141,14 @@ def bad_points_detection_call(state: State):
                                 <review>{state['fixed_review']}</review""")
     response = llm.with_structured_output(BadPointsOfReview).invoke([system_message, user_message])
     print(response)
+
+    return {
+        'bad_speed_of_delivery': response.speed_of_delivery,
+        'bad_price': response.price,
+        'bad_quality': response.quality,
+        'bad_good_looking': response.good_looking,
+        'bad_fit_description': response.fit_description,
+    }
 
 workflow = StateGraph(State)
 workflow.add_node('fix_review', fix_review_call)
@@ -164,10 +192,15 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
         'callbacks': [LangfuseCallbackHandler()],
     }
 
-    graph.invoke(State({'original_review': review}), config=config)
+    result = graph.invoke(State({'original_review': review}), config=config)
 
     state = graph.get_state(config)
     print(state)
+
+    return {
+        'original_review': result.get('original_review'),
+        'fixed_review': result.get('fixed_review'),
+    }
 
 
 def main():
@@ -176,7 +209,7 @@ def main():
         'callbacks': [LangfuseCallbackHandler()],
     }
 
-    graph.invoke(State({'original_review': original_review}), config=config)
+    graph.invoke({'original_review': original_review}, config=config)
 
     state = graph.get_state(config)
     print(state)
