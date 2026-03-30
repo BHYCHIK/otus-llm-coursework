@@ -256,7 +256,7 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
             good_good_looking=res['good_points']['good_looking'],
             good_fit_description=res['good_points']['fit_description'],
             good_functionality=res['good_points']['functionality'],
-            bad_speed_of_delivery=res['good_points']['speed_of_delivery'],
+            bad_speed_of_delivery=res['bad_points']['speed_of_delivery'],
             bad_price=res['bad_points']['price'],
             bad_quality=res['bad_points']['quality'],
             bad_good_looking=res['bad_points']['good_looking'],
