@@ -10,6 +10,7 @@ from langfuse.langchain import CallbackHandler as LangfuseCallbackHandler
 
 from dotenv import load_dotenv
 import os
+import uuid
 
 from fastapi import FastAPI, Form
 
@@ -187,8 +188,10 @@ def root():
 
 @app.post('/analyze_review')
 def analyze_review(review: str = Form(..., description="Review from marketplace")):
+    thread_id = str(uuid.uuid4())
+
     config: RunnableConfig = {
-        'configurable': {'thread_id': 1},
+        'configurable': {'thread_id': thread_id},
         'callbacks': [LangfuseCallbackHandler()],
     }
 
@@ -219,8 +222,10 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
 
 
 def main():
+    thread_id = str(uuid.uuid4())
+
     config: RunnableConfig = {
-        'configurable': {'thread_id': 1},
+        'configurable': {'thread_id': thread_id},
         'callbacks': [LangfuseCallbackHandler()],
     }
 
