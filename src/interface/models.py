@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Text, DateTime
+from sqlalchemy import Integer, String, Text, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 from sqlalchemy.types import JSON
@@ -12,6 +12,7 @@ class ReviewAnalysis(Base):
 
     product_id: Mapped[int] = mapped_column(Integer, index=True)
     thread_id: Mapped[str] = mapped_column(String(64), index=True)
+    review_fix_skipped: Mapped[bool] = mapped_column(Boolean, default=False)
 
     original_review: Mapped[str] = mapped_column(Text)
     fixed_review: Mapped[str | None] = mapped_column(Text, nullable=True)

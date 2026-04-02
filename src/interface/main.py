@@ -10,9 +10,12 @@ from .models import ReviewAnalysis
 from .settings import settings
 from .schemas import AnalyzerResponse
 
-app = FastAPI(title="Review UI Service")
+from pathlib import Path
 
-templates = Jinja2Templates(directory="./src/interface/templates")
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+app = FastAPI(title="Review UI Service")
 
 
 @app.on_event("startup")
@@ -78,7 +81,6 @@ async def submit_review(
     db.commit()
     db.refresh(item)
 
-    # 4) Редирект на детальную страницу
     return RedirectResponse(url=f"/reviews/{item.id}", status_code=303)
 
 

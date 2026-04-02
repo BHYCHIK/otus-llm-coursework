@@ -7,6 +7,7 @@ class AnalyzerResponse(BaseModel):
     fixed_review: Optional[str] = None
     sentiment: Optional[str] = None
     thread_id: str
+    review_fix_skipped: bool
     product_id: int
     good_points: Dict[str, Any]
     bad_points: Dict[str, Any]

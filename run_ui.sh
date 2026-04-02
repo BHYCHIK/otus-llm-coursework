@@ -1,0 +1,1 @@
+uvicorn src.interface.main:app --reload --port 8005

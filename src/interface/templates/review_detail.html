@@ -9,6 +9,7 @@
         <div class="mb-2"><strong>Product ID:</strong> {{ item.product_id }}</div>
         <div class="mb-2"><strong>Sentiment:</strong> {{ item.sentiment or "—" }}</div>
         <div class="mb-2"><strong>Thread ID:</strong> <code>{{ item.thread_id }}</code></div>
+        <div class="mb-2"><strong>Была пропущена нормализация текста:</strong> <code>{{ item.review_fix_skipped }}</code></div>
         <div class="mb-2"><strong>Создан:</strong> {{ item.created_at }}</div>
       </div>
     </div>

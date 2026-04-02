@@ -209,6 +209,7 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
             'fixed_review': result.get('fixed_review'),
             'sentiment': result.get('sentiment'),
             'thread_id': thread_id,
+            'review_fix_skipped': os.environ.get('SKIP_REVIEW_FIX') == 'true',
             'product_id': product_id,
             'good_points': {
                 'speed_of_delivery': result.get('good_speed_of_delivery'),
