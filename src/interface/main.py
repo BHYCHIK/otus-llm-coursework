@@ -19,8 +19,13 @@ app = FastAPI(title="Review UI Service")
 
 
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
     Base.metadata.create_all(bind=engine)
+    app.state.http = httpx.AsyncClient(timeout=settings.ANALYZER_API_TIMEOUT)
+
+@app.on_event("shutdown")
+async def shutdown():
+    await app.state.http.aclose()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -38,10 +43,10 @@ async def submit_review(
     url = f"{settings.ANALYZER_BASE_URL.rstrip('/')}/analyze_review"
 
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(url, data={"review": review, "product_id": product_id})
-            resp.raise_for_status()
-            data = resp.json()
+        client: httpx.AsyncClient = request.app.state.http
+        resp = await client.post(url, data={"review": review, "product_id": product_id})
+        resp.raise_for_status()
+        data = resp.json()
     except httpx.HTTPError as e:
         return templates.TemplateResponse(
             request,
@@ -72,6 +77,7 @@ async def submit_review(
         product_id=parsed.product_id,
         thread_id=parsed.thread_id,
         original_review=parsed.original_review,
+        review_fix_skipped=parsed.review_fix_skipped,
         fixed_review=parsed.fixed_review,
         sentiment=parsed.sentiment,
         good_points=parsed.good_points,

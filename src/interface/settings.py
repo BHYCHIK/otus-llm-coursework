@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     )
     ANALYZER_BASE_URL: str = ""
     DATABASE_URL: str = ""
+    ANALYZER_API_TIMEOUT: int = 120
 
 settings = Settings()
 print(settings)

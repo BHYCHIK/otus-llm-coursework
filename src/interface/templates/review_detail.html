@@ -6,8 +6,8 @@
   <div class="col-lg-6">
     <div class="card shadow-sm">
       <div class="card-body">
-        <div class="mb-2"><strong>Product ID:</strong> {{ item.product_id }}</div>
-        <div class="mb-2"><strong>Sentiment:</strong> {{ item.sentiment or "—" }}</div>
+        <div class="mb-2"><strong>Товар</strong> #{{ item.product_id }}</div>
+        <div class="mb-2"><strong>Тональность отзыва:</strong> {{ item.sentiment or "—" }}</div>
         <div class="mb-2"><strong>Thread ID:</strong> <code>{{ item.thread_id }}</code></div>
         <div class="mb-2"><strong>Была пропущена нормализация текста:</strong> <code>{{ item.review_fix_skipped }}</code></div>
         <div class="mb-2"><strong>Создан:</strong> {{ item.created_at }}</div>
@@ -16,10 +16,10 @@
 
     <div class="card shadow-sm mt-3">
       <div class="card-body">
-        <h2 class="h6">Original review</h2>
+        <h2 class="h6">Первоначальный отзыв</h2>
         <pre class="bg-light p-3 border rounded" style="white-space: pre-wrap;">{{ item.original_review }}</pre>
 
-        <h2 class="h6 mt-3">Fixed review</h2>
+        <h2 class="h6 mt-3">Скорректированный отзыв</h2>
         <pre class="bg-light p-3 border rounded" style="white-space: pre-wrap;">{{ item.fixed_review or "" }}</pre>
       </div>
     </div>
@@ -28,10 +28,10 @@
   <div class="col-lg-6">
     <div class="card shadow-sm">
       <div class="card-body">
-        <h2 class="h6">Good points</h2>
+        <h2 class="h6">Положительные качества</h2>
         <pre class="bg-light p-3 border rounded">{{ item.good_points | tojson(indent=2) }}</pre>
 
-        <h2 class="h6 mt-3">Bad points</h2>
+        <h2 class="h6 mt-3">Отрицательные качества</h2>
         <pre class="bg-light p-3 border rounded">{{ item.bad_points | tojson(indent=2) }}</pre>
       </div>
     </div>
