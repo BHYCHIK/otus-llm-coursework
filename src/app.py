@@ -11,7 +11,10 @@ load_dotenv('.env')
 
 app = FastAPI()
 
-review_analyzer = ReviewAnalyzer(os.environ.get("SENTIMENT_DETECTION_MODEL"))
+review_analyzer = ReviewAnalyzer(sentiment_detection_model=os.environ.get("SENTIMENT_DETECTION_MODEL"),
+                                 skip_review_fix=os.environ.get("SKIP_REVIEW_FIX")=="true",
+                                 llm_base_url=os.environ.get("BASEURL"),
+                                 llm_api_key=os.environ.get("APIKEY"))
 
 review_analysis_total = Counter(
     "review_analysis_total",
@@ -35,46 +38,22 @@ def analyze_review(review: str = Form(..., description="Review from marketplace"
                    product_id: int = Form(..., description="Product ID")):
 
     result = review_analyzer.analyze(review)
-
-    res = {
-        'original_review': result.get('original_review'),
-        'fixed_review': result.get('fixed_review'),
-        'sentiment': result.get('sentiment'),
-        'thread_id': 'thread_id',
-        'review_fix_skipped': os.environ.get('SKIP_REVIEW_FIX') == 'true',
-        'product_id': product_id,
-        'good_points': {
-            'speed_of_delivery': result.get('good_speed_of_delivery'),
-            'price': result.get('good_price'),
-            'quality': result.get('good_quality'),
-            'good_looking': result.get('good_good_looking'),
-            'fit_description': result.get('good_fit_description'),
-            'functionality': result.get('good_functionality'),
-        },
-        'bad_points': {
-            'speed_of_delivery': result.get('bad_speed_of_delivery'),
-            'price': result.get('bad_price'),
-            'quality': result.get('bad_quality'),
-            'good_looking': result.get('bad_good_looking'),
-            'fit_description': result.get('bad_fit_description'),
-            'functionality': result.get('bad_functionality'),
-        }
-    }
+    result['product_id'] = product_id
 
     review_analysis_total.labels(
-        sentiment=res['sentiment'],
-        good_speed_of_delivery=res['good_points']['speed_of_delivery'],
-        good_price=res['good_points']['price'],
-        good_quality=res['good_points']['quality'],
-        good_good_looking=res['good_points']['good_looking'],
-        good_fit_description=res['good_points']['fit_description'],
-        good_functionality=res['good_points']['functionality'],
-        bad_speed_of_delivery=res['bad_points']['speed_of_delivery'],
-        bad_price=res['bad_points']['price'],
-        bad_quality=res['bad_points']['quality'],
-        bad_good_looking=res['bad_points']['good_looking'],
-        bad_fit_description=res['bad_points']['fit_description'],
-        bad_functionality=res['bad_points']['functionality'],
+        sentiment=result['sentiment'],
+        good_speed_of_delivery=result['good_points']['speed_of_delivery'],
+        good_price=result['good_points']['price'],
+        good_quality=result['good_points']['quality'],
+        good_good_looking=result['good_points']['good_looking'],
+        good_fit_description=result['good_points']['fit_description'],
+        good_functionality=result['good_points']['functionality'],
+        bad_speed_of_delivery=result['bad_points']['speed_of_delivery'],
+        bad_price=result['bad_points']['price'],
+        bad_quality=result['bad_points']['quality'],
+        bad_good_looking=result['bad_points']['good_looking'],
+        bad_fit_description=result['bad_points']['fit_description'],
+        bad_functionality=result['bad_points']['functionality'],
     ).inc()
 
-    return res
+    return result

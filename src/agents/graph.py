@@ -8,9 +8,7 @@ from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langfuse.langchain import CallbackHandler as LangfuseCallbackHandler
 
-import os
 import uuid
-
 
 from pydantic import BaseModel, Field
 
@@ -63,14 +61,17 @@ class PointsOfReview(BaseModel):
         description='Пользователя расстраивает функциональность товара. Если в тексте нет явного упоминания — ставь false')
 
 class ReviewAnalyzer():
-    def __init__(self, sentiment_detection_model: str):
+    def __init__(self, sentiment_detection_model: str, llm_base_url: str, llm_api_key: str, skip_review_fix: bool = False):
         self._sentiment_detector = SentimentDetector(sentiment_detection_model)
 
         self._llm = ChatOpenAI(
-            base_url=os.getenv('BASEURL'),
+            base_url=llm_base_url,
             model='qwen-3-32b',
             temperature=0.0,
-            api_key=os.getenv('APIKEY'))
+            api_key=llm_api_key
+        )
+
+        self._skip_review_fix = skip_review_fix
 
         self._memory = MemorySaver()
 
@@ -97,14 +98,39 @@ class ReviewAnalyzer():
             }
 
             result = self._graph.invoke({'original_review': review}, config=config)
-            return result
+
+            res = {
+                'original_review': result.get('original_review'),
+                'fixed_review': result.get('fixed_review'),
+                'sentiment': result.get('sentiment'),
+                'thread_id': thread_id,
+                'review_fix_skipped': self._skip_review_fix,
+                'good_points': {
+                    'speed_of_delivery': result.get('good_speed_of_delivery'),
+                    'price': result.get('good_price'),
+                    'quality': result.get('good_quality'),
+                    'good_looking': result.get('good_good_looking'),
+                    'fit_description': result.get('good_fit_description'),
+                    'functionality': result.get('good_functionality'),
+                },
+                'bad_points': {
+                    'speed_of_delivery': result.get('bad_speed_of_delivery'),
+                    'price': result.get('bad_price'),
+                    'quality': result.get('bad_quality'),
+                    'good_looking': result.get('bad_good_looking'),
+                    'fit_description': result.get('bad_fit_description'),
+                    'functionality': result.get('bad_functionality'),
+                }
+            }
+
+            return res
         finally:
             self._memory.delete_thread(thread_id)
 
 
 
     def fix_review_call(self, state: State):
-        if os.getenv("SKIP_REVIEW_FIX") == "true":
+        if self._skip_review_fix:
             return {
                 'fixed_review': state['original_review'],
             }
