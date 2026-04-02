@@ -96,23 +96,33 @@ def sentiment_detection_call(state: State):
         'sentiment': sentiment,
     }
 
-class GoodPointsOfReview(BaseModel):
-    speed_of_delivery: bool = Field(description='Пользователю нравится скорость доставки. Если в тексте нет явного упоминания — ставь false')
-    price: bool = Field(description='Пользователю нравится цена. Если в тексте нет явного упоминания — ставь false')
-    quality: bool = Field(description='Пользователю нравится качество товара. Если в тексте нет явного упоминания — ставь false')
-    good_looking: bool = Field(description='Пользователю нравится дизайн и внешний вид товара. Если в тексте нет явного упоминания — ставь false')
-    fit_description: bool = Field(description='Пользователю нравится то, что товар соответствует описанию товара. Если в тексте нет явного упоминания — ставь false')
-    functionality: bool = Field(description='Пользователю нравится функциональность товара. Если в тексте нет явного упоминания — ставь false')
+class PointsOfReview(BaseModel):
+    good_speed_of_delivery: bool = Field(description='Пользователю нравится скорость доставки. Если в тексте нет явного упоминания — ставь false')
+    good_price: bool = Field(description='Пользователю нравится цена. Если в тексте нет явного упоминания — ставь false')
+    good_quality: bool = Field(description='Пользователю нравится качество товара. Если в тексте нет явного упоминания — ставь false')
+    good_good_looking: bool = Field(description='Пользователю нравится дизайн и внешний вид товара. Если в тексте нет явного упоминания — ставь false')
+    good_fit_description: bool = Field(description='Пользователю нравится то, что товар соответствует описанию товара. Если в тексте нет явного упоминания — ставь false')
+    good_functionality: bool = Field(description='Пользователю нравится функциональность товара. Если в тексте нет явного упоминания — ставь false')
 
-def good_points_detection_call(state: State):
+    bad_speed_of_delivery: bool = Field(description='Пользователя расстраивает скорость доставки. Если в тексте нет явного упоминания — ставь false')
+    bad_price: bool = Field(description='Пользователя расстраивает цена. Если в тексте нет явного упоминания — ставь false')
+    bad_quality: bool = Field(description='Пользователя расстраивает качество товара. Если в тексте нет явного упоминания — ставь false')
+    bad_good_looking: bool = Field(description='Пользователя расстраивает дизайн и внешний вид товара. Если в тексте нет явного упоминания — ставь false')
+    bad_fit_description: bool = Field(description='Пользователя расстраивает то, что товар отличается от описания товара. Если в тексте нет явного упоминания — ставь false')
+    bad_functionality: bool = Field(description='Пользователя расстраивает функциональность товара. Если в тексте нет явного упоминания — ставь false')
+
+def points_detection_call(state: State):
     system_message = SystemMessage(
-        '''Ты должен найти в отзыве то, что нравится пользователю:
+        '''Ты должен найти в отзыве то, что нравится автора отзыва и расстраивает его:
         - Скорость доставки
         - Качество товара
         - Цена товара
         - Дизайн и внешний вид товара
         - Функциональность товара
         - Соответствие товара описанию
+
+         Учитывай, что каждый из этих пунктов может быть true либо в среди положительных качеств, либо среди отрицательных.
+         Но может быть false в обоих случаях.
 
          Игнорируй то, что расстраивает пользователя. Ставь true только при явном упоминании, иначе false.''')
 
@@ -123,68 +133,33 @@ def good_points_detection_call(state: State):
     user_message = HumanMessage(f"""Найди то, что нравится пользователю в этом отзыве.
 
                                 <review>{fixed_review}</review>""")
-    response = llm.with_structured_output(GoodPointsOfReview).invoke([system_message, user_message])
+    response = llm.with_structured_output(PointsOfReview).invoke([system_message, user_message])
 
     return {
-        'good_speed_of_delivery': response.speed_of_delivery,
-        'good_price': response.price,
-        'good_quality': response.quality,
-        'good_good_looking': response.good_looking,
-        'good_fit_description': response.fit_description,
-        'good_functionality': response.functionality,
-    }
+        'good_speed_of_delivery': response.good_speed_of_delivery,
+        'good_price': response.good_price,
+        'good_quality': response.good_quality,
+        'good_good_looking': response.good_good_looking,
+        'good_fit_description': response.good_fit_description,
+        'good_functionality': response.good_functionality,
 
-class BadPointsOfReview(BaseModel):
-    speed_of_delivery: bool = Field(description='Пользователя расстраивает скорость доставки. Если в тексте нет явного упоминания — ставь false')
-    price: bool = Field(description='Пользователя расстраивает цена. Если в тексте нет явного упоминания — ставь false')
-    quality: bool = Field(description='Пользователя расстраивает качество товара. Если в тексте нет явного упоминания — ставь false')
-    good_looking: bool = Field(description='Пользователя расстраивает дизайн и внешний вид товара. Если в тексте нет явного упоминания — ставь false')
-    fit_description: bool = Field(description='Пользователя расстраивает то, что товар отличается от описания товара. Если в тексте нет явного упоминания — ставь false')
-    functionality: bool = Field(description='Пользователя расстраивает функциональность товара. Если в тексте нет явного упоминания — ставь false')
-
-def bad_points_detection_call(state: State):
-    system_message = SystemMessage(
-        '''Ты должен найти в отзыве то, что расстраивает пользователя:
-        - Скорость доставки
-        - Качество товара
-        - Цена товара
-        - Дизайн и внешний вид товара
-        - Функциональность товара
-        - Соответствие товара описанию
-
-         Игнорируй то, что нравится пользователю. Ставь true только при явном упоминании, иначе false.''')
-
-    fixed_review = state.get("fixed_review")
-    if not fixed_review:
-        raise ValueError("fixed_review missing")
-
-    user_message = HumanMessage(f"""Найди то, что расстраивает пользователя в этом отзыве.
-
-                                <review>{fixed_review}</review>""")
-    response = llm.with_structured_output(BadPointsOfReview).invoke([system_message, user_message])
-
-    return {
-        'bad_speed_of_delivery': response.speed_of_delivery,
-        'bad_price': response.price,
-        'bad_quality': response.quality,
-        'bad_good_looking': response.good_looking,
-        'bad_fit_description': response.fit_description,
-        'bad_functionality': response.functionality,
+        'bad_speed_of_delivery': response.bad_speed_of_delivery,
+        'bad_price': response.bad_price,
+        'bad_quality': response.bad_quality,
+        'bad_good_looking': response.bad_good_looking,
+        'bad_fit_description': response.bad_fit_description,
+        'bad_functionality': response.bad_functionality,
     }
 
 workflow = StateGraph(State)
 workflow.add_node('fix_review', fix_review_call)
 workflow.add_node('sentiment_detection', sentiment_detection_call)
-workflow.add_node('good_points_detection', good_points_detection_call)
-workflow.add_node('bad_points_detection', bad_points_detection_call)
-
+workflow.add_node('points_detection', points_detection_call)
 
 workflow.add_edge(START, "fix_review")
 workflow.add_edge('fix_review', 'sentiment_detection')
-workflow.add_edge('sentiment_detection', 'good_points_detection')
-workflow.add_edge('good_points_detection', 'bad_points_detection')
-workflow.add_edge('bad_points_detection', END)
-
+workflow.add_edge('sentiment_detection', 'points_detection')
+workflow.add_edge('points_detection', END)
 
 graph = workflow.compile(checkpointer=memory)
 
