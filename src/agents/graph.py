@@ -1,5 +1,3 @@
-from typing import TypedDict, NotRequired
-
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
@@ -7,58 +5,12 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langfuse.langchain import CallbackHandler as LangfuseCallbackHandler
+from .state import State
+from .points_of_review import PointsOfReview
 
 import uuid
 
-from pydantic import BaseModel, Field
-
-from src.sentiment_detector.sentiment_detector import SentimentDetector
-
-class State(TypedDict):
-    original_review: str
-    fixed_review: NotRequired[str]
-    sentiment: NotRequired[str]
-
-    good_speed_of_delivery: NotRequired[bool]
-    good_price: NotRequired[bool]
-    good_quality: NotRequired[bool]
-    good_good_looking: NotRequired[bool]
-    good_fit_description: NotRequired[bool]
-    good_functionality: NotRequired[bool]
-
-    bad_speed_of_delivery: NotRequired[bool]
-    bad_price: NotRequired[bool]
-    bad_quality: NotRequired[bool]
-    bad_good_looking: NotRequired[bool]
-    bad_fit_description: NotRequired[bool]
-    bad_functionality: NotRequired[bool]
-
-class PointsOfReview(BaseModel):
-    good_speed_of_delivery: bool = Field(
-        description='Пользователю нравится скорость доставки. Если в тексте нет явного упоминания — ставь false')
-    good_price: bool = Field(
-        description='Пользователю нравится цена. Если в тексте нет явного упоминания — ставь false')
-    good_quality: bool = Field(
-        description='Пользователю нравится качество товара. Если в тексте нет явного упоминания — ставь false')
-    good_good_looking: bool = Field(
-        description='Пользователю нравится дизайн и внешний вид товара. Если в тексте нет явного упоминания — ставь false')
-    good_fit_description: bool = Field(
-        description='Пользователю нравится то, что товар соответствует описанию товара. Если в тексте нет явного упоминания — ставь false')
-    good_functionality: bool = Field(
-        description='Пользователю нравится функциональность товара. Если в тексте нет явного упоминания — ставь false')
-
-    bad_speed_of_delivery: bool = Field(
-        description='Пользователя расстраивает скорость доставки. Если в тексте нет явного упоминания — ставь false')
-    bad_price: bool = Field(
-        description='Пользователя расстраивает цена. Если в тексте нет явного упоминания — ставь false')
-    bad_quality: bool = Field(
-        description='Пользователя расстраивает качество товара. Если в тексте нет явного упоминания — ставь false')
-    bad_good_looking: bool = Field(
-        description='Пользователя расстраивает дизайн и внешний вид товара. Если в тексте нет явного упоминания — ставь false')
-    bad_fit_description: bool = Field(
-        description='Пользователя расстраивает то, что товар отличается от описания товара. Если в тексте нет явного упоминания — ставь false')
-    bad_functionality: bool = Field(
-        description='Пользователя расстраивает функциональность товара. Если в тексте нет явного упоминания — ставь false')
+from src.agents.sentiment_detector.sentiment_detector import SentimentDetector
 
 class ReviewAnalyzer():
     def __init__(self, sentiment_detection_model: str, llm_base_url: str, llm_api_key: str, skip_review_fix: bool = False):
