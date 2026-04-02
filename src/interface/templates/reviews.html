@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Все отзывы</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    {% if items|length == 0 %}
+      <div class="text-muted">Пока нет сохранённых отзывов.</div>
+    {% else %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Product</th>
+              <th>Sentiment</th>
+              <th>Создан</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for r in items %}
+            <tr>
+              <td>{{ r.id }}</td>
+              <td>{{ r.product_id }}</td>
+              <td>
+                {% if r.sentiment %}
+                  <span class="badge text-bg-secondary">{{ r.sentiment }}</span>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>{{ r.created_at }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="/reviews/{{ r.id }}">Открыть</a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

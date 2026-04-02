@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h4 mb-3">Анализ отзыва</h1>
+
+        <form method="post" action="/submit">
+          <div class="mb-3">
+            <label class="form-label">Product ID</label>
+            <input class="form-control" type="number" name="product_id" required value="1">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Отзыв</label>
+            <textarea class="form-control" name="review" rows="6" required
+              placeholder="Введите отзыв..."></textarea>
+          </div>
+
+          <button class="btn btn-primary" type="submit">Отправить на анализ</button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
