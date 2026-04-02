@@ -64,6 +64,11 @@ memory = MemorySaver()
 
 
 def fix_review_call(state: State):
+    if os.getenv("SKIP_REVIEW_FIX") == "true":
+        return {
+            'fixed_review': state['original_review'],
+        }
+
     system_message = SystemMessage(content="""
     Ты редактор текстов в издательстве.
     На вход ты получаешь текст. Твоя задача его исправить, не удаляй, и не добавляй смысловые фрагменты.
