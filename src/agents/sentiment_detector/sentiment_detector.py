@@ -9,6 +9,7 @@ class SentimentDetector:
 
         self._model_path = model_path
         self._tokenizer = AutoTokenizer.from_pretrained(model_path)
+        self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._model = AutoModelForSequenceClassification.from_pretrained(
             self._model_path,
             num_labels=num_labels,
@@ -16,15 +17,14 @@ class SentimentDetector:
             label2id=label2id,
             # ignore_mismatched_sizes=True,  # включите, если ругается на размер классификационной головы
         )
+        self._model.to(self._device).eval()
 
     @torch.inference_mode()
     def predict_sentiment(self, texts, max_length=256):
-        self._model.eval()
-        device = next(self._model.parameters()).device
         batch = self._tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=max_length)
-        batch = {k: v.to(device) for k, v in batch.items()}
+        batch = {k: v.to(self._device) for k, v in batch.items()}
         out = self._model(**batch)
-        probs = torch.softmax(out.logits, dim=-1).cpu().numpy()
+        probs = torch.softmax(out.logits, dim=-1).detach().cpu().numpy()
         pred_ids = probs.argmax(axis=-1)
         return [
             {
