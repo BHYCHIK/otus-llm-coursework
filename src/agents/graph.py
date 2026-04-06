@@ -31,11 +31,14 @@ class ReviewAnalyzer():
         self._workflow.add_node('fix_review', self.fix_review_call)
         self._workflow.add_node('sentiment_detection', self.sentiment_detection_call)
         self._workflow.add_node('points_detection', self.points_detection_call)
+        self._workflow.add_node('join_node', lambda state: {})
 
         self._workflow.add_edge(START, "fix_review")
         self._workflow.add_edge('fix_review', 'sentiment_detection')
-        self._workflow.add_edge('sentiment_detection', 'points_detection')
-        self._workflow.add_edge('points_detection', END)
+        self._workflow.add_edge('fix_review', 'points_detection')
+        self._workflow.add_edge('sentiment_detection', 'join_node')
+        self._workflow.add_edge('points_detection', 'join_node')
+        self._workflow.add_edge('join_node', END)
 
         self._graph = self._workflow.compile(checkpointer=self._memory)
 
