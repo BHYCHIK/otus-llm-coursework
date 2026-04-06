@@ -43,7 +43,7 @@ class ReviewAnalyzer():
         self._graph = self._workflow.compile(checkpointer=self._memory)
 
 
-    def analyze(self, review: str):
+    async def analyze(self, review: str):
         thread_id = str(uuid.uuid4())
 
         try:
@@ -52,7 +52,7 @@ class ReviewAnalyzer():
                 'callbacks': [LangfuseCallbackHandler()],
             }
 
-            result = self._graph.invoke({'original_review': review}, config=config)
+            result = await self._graph.ainvoke({'original_review': review}, config=config)
 
             res = {
                 'original_review': result.get('original_review'),
@@ -84,7 +84,7 @@ class ReviewAnalyzer():
 
 
 
-    def fix_review_call(self, state: State):
+    async def fix_review_call(self, state: State):
         if self._skip_review_fix:
             return {
                 'fixed_review': state['original_review'],
@@ -106,14 +106,14 @@ class ReviewAnalyzer():
 
         user_message = HumanMessage(content=f"""Исправить следующий отзыв о товаре согласно правилам:
         <original_review>{state['original_review']}</original_review>""")
-        response = self._llm.invoke([system_message, user_message])
+        response = await self._llm.ainvoke([system_message, user_message])
 
         return {
             'fixed_review': response.content,
         }
 
 
-    def sentiment_detection_call(self, state: State):
+    async def sentiment_detection_call(self, state: State):
         fixed_review = state.get("fixed_review")
         if not fixed_review:
             raise ValueError("fixed_review missing")
@@ -124,7 +124,7 @@ class ReviewAnalyzer():
         }
 
 
-    def points_detection_call(self, state: State):
+    async def points_detection_call(self, state: State):
         system_message = SystemMessage(
             '''Ты должен найти в отзыве то, что нравится автора отзыва и расстраивает его:
             - Скорость доставки
@@ -146,7 +146,7 @@ class ReviewAnalyzer():
         user_message = HumanMessage(f"""Найди то, что нравится пользователю в этом отзыве.
     
                                     <review>{fixed_review}</review>""")
-        response = self._llm.with_structured_output(PointsOfReview).invoke([system_message, user_message])
+        response = await self._llm.with_structured_output(PointsOfReview).ainvoke([system_message, user_message])
 
         return {
             'good_speed_of_delivery': response.good_speed_of_delivery,
