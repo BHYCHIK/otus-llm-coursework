@@ -12,7 +12,7 @@ load_dotenv('.env')
 
 app = FastAPI()
 
-sem = asyncio.Semaphore(10)  # лимит одновременных анализов
+sem = asyncio.Semaphore(int(os.getenv("MAX_PARALLEL")))  # лимит одновременных анализов
 
 review_analyzer = ReviewAnalyzer(sentiment_detection_model=os.environ.get("SENTIMENT_DETECTION_MODEL"),
                                  skip_review_fix=os.environ.get("SKIP_REVIEW_FIX")=="true",

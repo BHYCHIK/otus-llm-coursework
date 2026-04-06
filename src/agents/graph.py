@@ -7,6 +7,7 @@ from langgraph.graph import StateGraph
 from langfuse.langchain import CallbackHandler as LangfuseCallbackHandler
 from .state import State
 from .points_of_review import PointsOfReview
+import anyio
 
 import uuid
 
@@ -118,7 +119,10 @@ class ReviewAnalyzer():
         if not fixed_review:
             raise ValueError("fixed_review missing")
 
-        sentiment = self._sentiment_detector.predict_sentiment([fixed_review])[0]['label']
+        sentiment = await anyio.to_thread.run_sync(
+            lambda: self._sentiment_detector.predict_sentiment([fixed_review])[0]["label"]
+        )
+
         return {
             'sentiment': sentiment,
         }
